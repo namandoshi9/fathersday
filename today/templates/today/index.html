@@ -1,0 +1,303 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Father's Day">
+    <meta name="keywords" content="Father's Day">
+    <meta name="author" content="Father's Day">
+    <title>Father's Day</title>
+
+    <!-- favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.png' %}">
+
+    <!-- all css use -->
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/all.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .error-msg {
+            color: red;
+        }
+
+        .success-msg {
+            color: green;
+        }
+
+        .modal-dialog {
+            max-width: 800px;
+            margin: 1.75rem auto;
+        }
+
+        /* .modal-content { height: 600px; } */
+        .img-container {
+            width: 100%;
+            height: calc(100% - 100px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #f7f7f7;
+        }
+
+        .img-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+</head>
+
+<body>
+
+    <!-- header -->
+    <header class="header" id="header">
+        <div class="container">
+            <div class="row">
+                <div class="middle_logo">
+                    <img src="{% static 'images/sun.png' %}">
+                    <img src="{% static 'images/dad.png' %}">
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- header-end -->
+
+    <!-- wrapper -->
+    <div class="wrapper" id="wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="white_shadow">
+                        <div class="title">
+                            <h3>Get Ready To Be There For Your Dear Dad</h3>
+                            <p>Upload an image of you along with your father which will be generated in a template as a
+                                final image. This final image can be set as a display picture on various social media
+                                platforms.</p>
+                            <h4>“Dear Dad, I Am Because You Are”</h4>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-7 col-md-6 col-sm-12 col-12">
+                                <div class="from_section">
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Name</label>
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                placeholder="Enter your name" style="color: black;">
+                                            {% if error_msg_name %}
+                                            <p class="error-msg">{{ error_msg_name }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="upload" class="form-label">Upload Image</label>
+                                            <div class="upload_img">
+                                                <div class="up_img" id="preview">
+                                                    <img src="{% static 'images/upload.png' %}" id="preview-img"
+                                                        alt="Preview Image">
+                                                    <input type="file" class="form-control" id="image" name="image"
+                                                        accept="image/*">
+                                                    <input type="hidden" id="cropped_image" name="cropped_image">
+                                                </div>
+                                                <span>Drop Files Here Or Browse Files</span>
+                                            </div>
+                                            {% if error_msg_image %}
+                                            <p class="error-msg">{{ error_msg_image }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mb-3 text-center">
+                                            <button type="submit" class="btn btn-primary">Create</button>
+                                        </div>
+                                        {% if success_message %}
+                                        <p class="success-msg">{{ success_message }}</p>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-lg-5 col-md-6 col-sm-12 col-12">
+                                <div class="photo_frame">
+                                    {% if image_url %}
+                                    <img src="{{ image_url }}" alt="Merged Image">
+                                    {% else %}
+                                    <img src="{% static 'images/frame.png' %}" alt="Frame">
+                                    {% endif %}
+                                </div>
+                                {% if image_url %}
+                                <div class="mid_btn">
+                                    <div class="mb-3 text-center">
+                                        <a href="{% url 'download_image' filename=name %}" class="btn btn-primary">
+                                            <img src="{% static 'images/dow.png' %}" alt=""> Download
+                                        </a>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="mb-3 text-center">
+                                    <button class="btn btn-primary" disabled>
+                                        <img src="{% static 'images/dow.png' %}" alt=""> Download
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- wrapper-end -->
+
+    <!-- Modal for cropping image -->
+    <div class="modal fade" id="cropImagePop" tabindex="-1" aria-labelledby="cropImagePopLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cropImagePopLabel">Crop Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="height: 558px;">
+                    <div class="img-container" style="height: 500px;">
+                        <img id="sample_image" src="" alt="Sample Image">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="rotateLeftBtn"><i class="fas fa-undo"></i>
+                        Rotate Left</button>
+                    <button type="button" class="btn btn-secondary" id="rotateRightBtn"><i class="fas fa-redo"></i>
+                        Rotate Right</button>
+                    <button type="button" id="crop" class="btn btn-primary">Crop</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- footer -->
+    <footer class="footer" id="footer">
+        <div class="container">
+            <div class="row align-item-center">
+                <div class="footer_info">
+                    <p>© 2023 - All rights reserved</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- footer-end -->
+
+    <!-- social media modal -->
+    <div class="modal fade" id="social_media" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Share</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="social">
+                        <li><a href="https://www.facebook.com/" target="_blank"><i
+                                    class="fa-brands fa-facebook-f"></i></a></li>
+                        <li><a href="https://www.instagram.com/" target="_blank"><i
+                                    class="fa-brands fa-instagram"></i></a></li>
+                        <li><a href="https://in.linkedin.com/" target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+                        </li>
+                        <li><a href="https://x.com/" target="_blank"><i class="fab fa-x-twitter"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- all script use -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/genral.js'"></script>
+    <!-- Cropper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var $modal = $('#cropImagePop');
+            var image = document.getElementById('sample_image');
+            var cropper;
+
+            function readURL(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        image.src = e.target.result;
+                        $modal.modal('show');
+                    }
+
+                    reader.readAsDataURL(input.files[0]); // convert to base64 string
+                }
+            }
+
+            $("#image").change(function () {
+                readURL(this);
+            });
+
+            $modal.on('shown.bs.modal', function () {
+                cropper = new Cropper(image, {
+                    aspectRatio: 1, // Set aspect ratio as needed
+                    viewMode: 1, // Set the view mode to ensure the whole image is visible within the crop box
+                    guides: true, // Show guides for better cropping
+                    // minContainerWidth: 766, // Minimum width of the cropper container
+                    // minContainerHeight: 600, // Minimum height of the cropper container
+                    minCanvasWidth: 200, // Minimum width of the canvas for cropping
+                    minCanvasHeight: 200, // Minimum height of the canvas for cropping
+                    autoCropArea: 1, // Automatically create crop box that fills the canvas
+                    zoomable: false, // Disable zooming
+                    scalable: false, // Disable scaling
+                    minCropBoxWidth: 200, // Minimum width of the crop box
+                    minCropBoxHeight: 200, // Minimum height of the crop box
+                    crop: function (event) {
+                        // Optional callback function when cropping is done
+                    }
+                });
+            }).on('hidden.bs.modal', function () {
+                cropper.destroy();
+                cropper = null;
+            });
+
+            $("#rotateLeftBtn").click(function () {
+                cropper.rotate(-90);
+            });
+
+            $("#rotateRightBtn").click(function () {
+                cropper.rotate(90);
+            });
+
+            $("#crop").click(function () {
+                canvas = cropper.getCroppedCanvas({
+                    width: 400, // Set the width of the output image
+                    height: 500, // Set the height of the output image
+                    fillColor: '#fff', // Fill color for the blank area after cropping
+                    imageSmoothingEnabled: true, // Enable image smoothing for better output quality
+                    imageSmoothingQuality: 'high' // Image smoothing quality
+                });
+
+                canvas.toBlob(function (blob) {
+                    var reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = function () {
+                        var base64data = reader.result;
+                        $modal.modal('hide');
+                        $('#preview-img').attr('src', base64data);
+                        $('#cropped_image').val(base64data); // Store the cropped image data in the hidden input
+                    }
+                });
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>
